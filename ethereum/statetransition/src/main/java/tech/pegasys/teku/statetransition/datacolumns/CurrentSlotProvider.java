@@ -11,12 +11,17 @@
  * specific language governing permissions and limitations under the License.
  */
 
-package tech.pegasys.teku.networking.eth2.peers;
+package tech.pegasys.teku.statetransition.datacolumns;
 
-import java.util.Optional;
-import org.apache.tuweni.units.bigints.UInt256;
-import tech.pegasys.teku.networking.p2p.peer.Peer;
+import tech.pegasys.teku.infrastructure.unsigned.UInt64;
+import tech.pegasys.teku.spec.Spec;
+import tech.pegasys.teku.spec.datastructures.forkchoice.ReadOnlyStore;
 
-public interface DiscoveryNodeIdExtractor {
-  Optional<UInt256> calculateDiscoveryNodeId(Peer peer);
+public interface CurrentSlotProvider {
+
+  static CurrentSlotProvider create(Spec spec, ReadOnlyStore store) {
+    return () -> spec.getCurrentSlot(store);
+  }
+
+  UInt64 getCurrentSlot();
 }

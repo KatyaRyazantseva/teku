@@ -11,12 +11,13 @@
  * specific language governing permissions and limitations under the License.
  */
 
-package tech.pegasys.teku.networking.eth2.peers;
+package tech.pegasys.teku.beacon.sync.events;
 
-import java.util.Optional;
-import org.apache.tuweni.units.bigints.UInt256;
-import tech.pegasys.teku.networking.p2p.peer.Peer;
+import java.util.Collection;
+import tech.pegasys.teku.infrastructure.events.VoidReturningChannelInterface;
+import tech.pegasys.teku.spec.datastructures.blocks.SignedBeaconBlock;
 
-public interface DiscoveryNodeIdExtractor {
-  Optional<UInt256> calculateDiscoveryNodeId(Peer peer);
+public interface SyncPreImportBlockChannel extends VoidReturningChannelInterface {
+
+  void onNewPreImportBlocks(Collection<SignedBeaconBlock> blocks);
 }
