@@ -893,7 +893,8 @@ public class BeaconChainController extends Service implements BeaconChainControl
             proposersDataManager,
             eventChannels.getPublisher(CustodyGroupCountChannel.class),
             combinedChainDataClient,
-            totalMyCustodyGroups);
+            totalMyCustodyGroups,
+            metricsSystem);
     eventChannels.subscribe(SlotEventsChannel.class, custodyGroupCountManager);
     this.custodyGroupCountManager = custodyGroupCountManager;
   }

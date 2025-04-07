@@ -17,7 +17,10 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.hyperledger.besu.plugin.services.MetricsSystem;
+import org.hyperledger.besu.plugin.services.metrics.Counter;
 import tech.pegasys.teku.ethereum.events.SlotEventsChannel;
+import tech.pegasys.teku.infrastructure.metrics.TekuMetricCategory;
 import tech.pegasys.teku.infrastructure.unsigned.UInt64;
 import tech.pegasys.teku.spec.Spec;
 import tech.pegasys.teku.spec.SpecMilestone;
@@ -41,6 +44,8 @@ public class CustodyGroupCountManagerImpl implements SlotEventsChannel, CustodyG
   private final ProposersDataManager proposersDataManager;
   private final CustodyGroupCountChannel custodyGroupCountChannel;
   private final CombinedChainDataClient combinedChainDataClient;
+  private final Counter totalCustodyGroupCount;
+  private final Counter totalCustodyGroupSyncedCount;
 
   private UInt64 lastEpoch = UInt64.MAX_VALUE;
 
@@ -50,7 +55,8 @@ public class CustodyGroupCountManagerImpl implements SlotEventsChannel, CustodyG
       final ProposersDataManager proposersDataManager,
       final CustodyGroupCountChannel custodyGroupCountChannel,
       final CombinedChainDataClient combinedChainDataClient,
-      final int initCustodyGroupCount) {
+      final int initCustodyGroupCount,
+      final MetricsSystem metricsSystem) {
     this.spec = spec;
     this.specConfigFulu = specConfigFulu;
     this.miscHelpersFulu =
@@ -61,6 +67,16 @@ public class CustodyGroupCountManagerImpl implements SlotEventsChannel, CustodyG
     this.initCustodyGroupCount = initCustodyGroupCount;
     this.custodyGroupCount = new AtomicInteger(initCustodyGroupCount);
     this.custodyGroupSyncedCount = new AtomicInteger(0);
+    this.totalCustodyGroupCount =
+        metricsSystem.createCounter(
+            TekuMetricCategory.BEACON,
+            "validator_custody_groups_total",
+            "Total count of custody groups custodied by a validator");
+    this.totalCustodyGroupSyncedCount =
+        metricsSystem.createCounter(
+            TekuMetricCategory.BEACON,
+            "backfilled_validator_custody_groups_total",
+            "Total count of custody groups backfilled by a validator");
   }
 
   @Override
@@ -123,6 +139,7 @@ public class CustodyGroupCountManagerImpl implements SlotEventsChannel, CustodyG
     }
     LOG.info("Synced custody group count updated to {}.", custodyGroupSyncedCount);
     custodyGroupCountChannel.onCustodyGroupCountSynced(custodyGroupSyncedCount);
+    totalCustodyGroupSyncedCount.inc(custodyGroupSyncedCount);
   }
 
   private synchronized boolean updateEpoch(final UInt64 epoch) {
@@ -141,6 +158,7 @@ public class CustodyGroupCountManagerImpl implements SlotEventsChannel, CustodyG
           oldCustodyGroupCount,
           newCustodyGroupCount.intValue());
       custodyGroupCountChannel.onCustodyGroupCountUpdate(newCustodyGroupCount.intValue());
+      totalCustodyGroupCount.inc(newCustodyGroupCount.intValue());
     }
   }
 }
